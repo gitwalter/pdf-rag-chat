@@ -43,7 +43,6 @@ def displayPDF(file):
 
 def data_ingestion_pdf():    
     documents = SimpleDirectoryReader(DATA_DIR).load_data()
-    # storage_context = StorageContext.from_defaults()
     index = VectorStoreIndex.from_documents(documents)
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 
