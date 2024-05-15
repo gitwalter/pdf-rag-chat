@@ -14,6 +14,9 @@ load_dotenv()
 
 token=os.getenv("HF_TOKEN")
 
+if not token:
+    token = st.secrets["HF_TOKEN"]
+
 # Configure the Llama index settings
 Settings.llm = HuggingFaceInferenceAPI(
     model_name="google/gemma-1.1-7b-it",
