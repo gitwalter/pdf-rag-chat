@@ -1,9 +1,10 @@
 import streamlit as st
-from llama_index.core import StorageContext, load_index_from_storage, VectorStoreIndex, SimpleDirectoryReader, ChatPromptTemplate
+from llama_index.core import StorageContext, load_index_from_storage, download_loader,\
+     VectorStoreIndex, SimpleDirectoryReader, ChatPromptTemplate, Settings
 from llama_index.llms.huggingface import HuggingFaceInferenceAPI
-from dotenv import load_dotenv
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core import Settings
+from dotenv import load_dotenv
+
 import os
 import base64
 
@@ -19,8 +20,8 @@ Settings.llm = HuggingFaceInferenceAPI(
     tokenizer_name="google/gemma-1.1-7b-it",
     context_window=3000,
     token = token,
-    max_new_tokens=512,
-    generate_kwargs={"temperature": 0.1},
+    max_new_tokens=1024,
+    generate_kwargs={"temperature": 0.0},
 )
 Settings.embed_model = HuggingFaceEmbedding(
     model_name="BAAI/bge-small-en-v1.5"
@@ -40,9 +41,16 @@ def displayPDF(file):
     pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
     st.markdown(pdf_display, unsafe_allow_html=True)
 
-def data_ingestion():
+def data_ingestion_pdf():    
     documents = SimpleDirectoryReader(DATA_DIR).load_data()
-    storage_context = StorageContext.from_defaults()
+    # storage_context = StorageContext.from_defaults()
+    index = VectorStoreIndex.from_documents(documents)
+    index.storage_context.persist(persist_dir=PERSIST_DIR)
+
+def data_ingestion_web(url):      
+    BeautifulSoupWebReader = download_loader("BeautifulSoupWebReader")
+    loader = BeautifulSoupWebReader()
+    documents = loader.load_data(urls=[url])    
     index = VectorStoreIndex.from_documents(documents)
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 
@@ -78,26 +86,32 @@ def handle_query(query):
 
 
 # Streamlit app initialization
-st.title("(PDF) Information and Inference🗞️")
+st.title("(PDF and Webpage) Information and Inference🗞️")
 st.markdown("Retrieval-Augmented Generation") 
 st.markdown("start chat ...🚀")
 
 if 'messages' not in st.session_state:
-    st.session_state.messages = [{'role': 'assistant', "content": 'Hello! Upload a PDF and ask me anything about its content.'}]
+    st.session_state.messages = [{'role': 'assistant', "content": 'Hello! Upload a PDF or specify a URL and ask me anything about its content.'}]
 
 with st.sidebar:
     st.title("Menu:")
-    uploaded_file = st.file_uploader("Upload your PDF Files and Click on the Submit & Process Button")
+    uploaded_file = st.file_uploader("Upload your PDF Files or enter a URL and Click on the Submit & Process Button")
+    
+    url = st.text_input("Enter URL")
+    
     if st.button("Submit & Process"):
         with st.spinner("Processing..."):
-            filepath = "data/saved_pdf.pdf"
-            with open(filepath, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            # displayPDF(filepath)  # Display the uploaded PDF
-            data_ingestion()  # Process PDF every time new file is uploaded
+            if url:
+                data_ingestion_web(url)
+            else:
+                filepath = "data/saved_pdf.pdf"
+                with open(filepath, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                displayPDF(filepath)  # Display the uploaded PDF
+                data_ingestion_pdf()  # Process PDF every time new file is uploaded
             st.success("Done")
 
-user_prompt = st.chat_input("Ask me anything about the content of the PDF:")
+user_prompt = st.chat_input("Ask me anything about the content of the PDF or the Webpage:")
 if user_prompt:
     st.session_state.messages.append({'role': 'user', "content": user_prompt})
     response = handle_query(user_prompt)
