@@ -143,7 +143,7 @@ st.markdown("Retrieval-Augmented Generation")
 st.markdown("start chat ...🚀")
 
 # Get list of existing vector stores
-existing_vector_stores = os.listdir(PERSIST_DIR)
+existing_vector_stores = [d for d in os.listdir(PERSIST_DIR) if os.path.isdir(os.path.join(PERSIST_DIR, d))]
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
@@ -184,21 +184,16 @@ with st.sidebar:
                     data_directory
                     + "/"
                     + uploaded_file.name
-                )
-                
+                )                
                 
                 with open(filepath, "wb") as f:
                     f.write(uploaded_file.getbuffer())
-
-
 
                 displayPDF(filepath)
 
                 vector_store_directory = (
                     PERSIST_DIR + "/" + remove_special_characters(uploaded_file.name)
-                )
-
-                
+                )                
 
                 data_ingestion_pdf(data_directory, vector_store_directory)
 
