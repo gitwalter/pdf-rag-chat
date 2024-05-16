@@ -30,7 +30,7 @@ Settings.llm = HuggingFaceInferenceAPI(
     tokenizer_name="google/gemma-1.1-7b-it",
     context_window=3000,
     token=token,
-    max_new_tokens=1024,
+    max_new_tokens=2048,
     generate_kwargs={"temperature": 0.0},
 )
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
