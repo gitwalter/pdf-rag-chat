@@ -216,6 +216,11 @@ if user_prompt:
     response = handle_query(user_prompt, vector_store_directory)
     st.session_state.messages.append({"role": "assistant", "content": response})
 
+
+if st.button("Refresh"):
+    st.session_state.messages = []
+
+    
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
