@@ -55,10 +55,15 @@ Welcome to the PDF and Webpage Information and Inference App! This application a
 ## File Structure
 
 ├── pdf-rag.py # Main application file
+
 ├── requirements.txt # Required Python packages
+
 ├── .env # Environment variables (not included in the repo)
+
 ├── db/ # Directory for persistent vector stores
+
 ├── data/ # Directory for uploaded PDFs and webpage data
+
 └── README.md # This README file #
 
 
