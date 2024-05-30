@@ -66,15 +66,6 @@ Welcome to the PDF and Webpage Information and Inference App! This application a
 
 └── README.md # This README file #
 
-
-## Contributing
-
-We welcome contributions to improve this project! If you have any ideas, suggestions, or issues, please create a pull request or open an issue on [GitHub](https://github.com/gitwalter/pdf-rag-chat).
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgements
 
 - [Streamlit](https://streamlit.io/) for providing the framework for the web app.
