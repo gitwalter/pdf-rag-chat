@@ -69,7 +69,7 @@ Welcome to the PDF and Webpage Information and Inference App! This application a
 ## Acknowledgements
 
 - [Streamlit](https://streamlit.io/) for providing the framework for the web app.
-- [LlamaIndex](https://github.com/jerryjliu/llama) for the indexing and retrieval functionalities.
+- [LlamaIndex](https://www.llamaindex.ai/) for the indexing and retrieval functionalities.
 - [HuggingFace](https://huggingface.co/) for the inference and embedding models.
 
 Enjoy using the PDF and Webpage Information and Inference App! 🚀
