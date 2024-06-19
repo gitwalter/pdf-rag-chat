@@ -28,7 +28,10 @@ Functions:
     - delete_vector_store: Deletes the loaded vector store.
     - handle_query: Handles user queries by interacting with the vector store and returning responses.
 """
-
+import os
+import base64
+import re
+import shutil
 import streamlit as st
 from llama_index.core import (
     StorageContext,
@@ -42,10 +45,6 @@ from llama_index.core import (
 from llama_index.llms.huggingface import HuggingFaceInferenceAPI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from dotenv import load_dotenv
-import os
-import base64
-import re
-import shutil
 
 
 def get_hf_token():
@@ -87,14 +86,14 @@ def create_vector_store_directories():
     Returns:
         tuple: Paths for persistent storage and data directories.
     """
-    PERSIST_DIR = "./db"
-    DATA_DIR = "./data"
-    os.makedirs(DATA_DIR, exist_ok=True)
-    os.makedirs(PERSIST_DIR, exist_ok=True)
-    return PERSIST_DIR, DATA_DIR
+    persistence_directory = "./db"
+    data_directory = "./data"    
+    os.makedirs(data_directory, exist_ok=True)
+    os.makedirs(persistence_directory, exist_ok=True)
+    return persistence_directory, data_directory
 
 
-def build_vector_store(uploaded_file, url):
+def build_vector_store(pdf_file, website_url):
     """
     Processes the uploaded file or URL and builds the vector store.
 
@@ -103,18 +102,18 @@ def build_vector_store(uploaded_file, url):
         url (str): The URL to process.
     """
     with st.spinner("Processing..."):
-        if url:
-            vector_store_directory = PERSIST_DIR + "/" + remove_special_characters_from_url(url)
-            data_ingestion_web(url, vector_store_directory)
-        elif uploaded_file:
-            data_directory = DATA_DIR + "/" + remove_special_characters(uploaded_file.name)
+        if website_url:
+            vector_store_dir = PERSIST_DIR + "/" + remove_special_characters_from_url(website_url)
+            data_ingestion_web(website_url, vector_store_dir)
+        elif pdf_file:
+            data_directory = DATA_DIR + "/" + remove_special_characters(pdf_file.name)
             os.makedirs(data_directory, exist_ok=True)
-            filepath = data_directory + "/" + uploaded_file.name
+            filepath = data_directory + "/" + pdf_file.name
             with open(filepath, "wb") as f:
-                f.write(uploaded_file.getbuffer())
+                f.write(pdf_file.getbuffer())
             displayPDF(filepath)
-            vector_store_directory = PERSIST_DIR + "/" + remove_special_characters(uploaded_file.name)
-            data_ingestion_pdf(data_directory, vector_store_directory)
+            vector_store_dir = PERSIST_DIR + "/" + remove_special_characters(pdf_file.name)
+            data_ingestion_pdf(data_directory, vector_store_dir)
         st.success("Done")
 
 
@@ -195,8 +194,8 @@ def data_ingestion_web(url, persist_dir):
         url (str): The URL to load documents from.
         persist_dir (str): The directory where the vector store will be persisted.
     """
-    BeautifulSoupWebReader = download_loader("BeautifulSoupWebReader")
-    loader = BeautifulSoupWebReader()
+    beautiful_soup_web_reader = download_loader("BeautifulSoupWebReader")
+    loader = beautiful_soup_web_reader()
     documents = loader.load_data(urls=[url])
     create_vector_store(documents, persist_dir)
 
@@ -278,7 +277,10 @@ if "messages" not in st.session_state:
             "content": "Hello! Upload a PDF or specify a URL and ask me anything about its content.",
         }
     ]
-
+    
+if "vector_store_directory" not in st.session_state:
+    st.session_state.vector_store_directory = ""
+    
 with st.sidebar:
     st.title("Menu:")
     uploaded_file = st.file_uploader("Upload your PDF Files or enter a URL and Click on the Submit & Process Button")
@@ -295,10 +297,10 @@ with st.sidebar:
 
 user_prompt = st.chat_input("Ask me anything about the content of the PDF or the Webpage:")
 if user_prompt:
+    vector_store_directory = st.session_state.vector_store_directory
     if selected_store:
         vector_store_directory = PERSIST_DIR + "/" + selected_store
-    if not vector_store_directory:
-        vector_store_directory = st.session_state.vector_store_directory
+        st.session_state.vector_store_directory = vector_store_directory
 
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     response = handle_query(user_prompt, vector_store_directory)
